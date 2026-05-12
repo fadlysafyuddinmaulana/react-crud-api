@@ -57,3 +57,11 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+coba berikan tambahan yaitu pada state react langsung di perbarui setelah data baru muncul karena awalnya pakai refreshTrigger tapi kurang cocok bagi saya apakah ada rekomendasi mungkin di bawah ini contoh syntaxnya
+const handleDelete = async (id: number) => {
+  await axios.delete(`http://localhost:8000/api/products/${id}`);
+
+  // refresh data otomatis
+  getProducts();
+};
