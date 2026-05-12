@@ -1,1 +1,1 @@
-jadi gini
+jadi gini,hidup itu penuh sekali
