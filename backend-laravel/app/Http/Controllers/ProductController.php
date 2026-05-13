@@ -22,7 +22,13 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'stock' => 'required|integer',
             'price' => 'required|numeric',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+            $validated['image'] = $imagePath;
+        }
 
         return Product::create($validated);
     }

@@ -10,26 +10,36 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { NumericFormat } from "react-number-format";
 import api from "../services/api";
 
-function ProductCreate() {
+interface ProductCreateProps {
+  mode?: "card" | "plain";
+  onCreated?: () => void;
+}
+
+function ProductCreate({ mode = "card", onCreated }: ProductCreateProps) {
   const queryClient = useQueryClient();
 
   const [name, setName] = useState("");
   const [stock, setStock] = useState("");
   const [price, setPrice] = useState("");
-
-  const handleNumberInput = (value: string) => {
-    // Hanya izinkan angka, hapus karakter non-angka
-    return value.replace(/[^0-9]/g, "");
-  };
+  const [image, setImage] = useState<File | null>(null);
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const response = await api.post("/products", {
-        name,
-        stock: Number(stock),
-        price: Number(price),
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("stock", stock);
+      formData.append("price", price);
+      if (image) {
+        formData.append("image", image);
+      }
+
+      const response = await api.post("/products", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
       return response.data;
     },
@@ -38,6 +48,10 @@ function ProductCreate() {
       setName("");
       setStock("");
       setPrice("");
+      setImage(null);
+      if (onCreated) {
+        onCreated();
+      }
     },
   });
 
@@ -46,59 +60,107 @@ function ProductCreate() {
     mutation.mutate();
   };
 
-  return (
-    <Card elevation={3}>
-      <CardContent>
+  const handleReset = () => {
+    setName("");
+    setStock("");
+    setPrice("");
+    setImage(null);
+  };
+
+  const formContent = (
+    <>
+      {mode === "card" && (
         <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
           Create Product
         </Typography>
+      )}
 
-        {mutation.isError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            Failed to create product.
-          </Alert>
-        )}
+      {mutation.isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Failed to create product.
+        </Alert>
+      )}
 
-        <Box component="form" onSubmit={handleSubmit}>
-          <Stack spacing={2}>
-            <TextField
+      <Box component="form" onSubmit={handleSubmit}>
+        <Stack spacing={2} sx={{ pt: mode === "plain" ? 1 : 0 }}>
+          <TextField
+            fullWidth
+            label="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <NumericFormat
+              customInput={TextField}
               fullWidth
-              label="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              label="Stock"
+              value={stock}
+              onValueChange={(values) => {
+                setStock(values.value);
+              }}
+              valueIsNumericString
             />
-
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-              <TextField
-                fullWidth
-                type="text"
-                label="Stock"
-                value={stock}
-                onChange={(e) => setStock(handleNumberInput(e.target.value))}
-                placeholder="Hanya angka"
-              />
-              <TextField
-                fullWidth
-                type="text"
-                label="Price"
-                value={price}
-                onChange={(e) => setPrice(handleNumberInput(e.target.value))}
-                placeholder="Hanya angka"
-              />
-            </Stack>
-
-            <Button
-              type="submit"
-              variant="contained"
-              size="large"
-              disabled={mutation.isPending}
-              sx={{ mt: 1 }}
-            >
-              {mutation.isPending ? "Saving..." : "Save"}
-            </Button>
+            <NumericFormat
+              customInput={TextField}
+              fullWidth
+              label="Price"
+              value={price}
+              onValueChange={(values) => {
+                setPrice(values.value);
+              }}
+              thousandSeparator="."
+              decimalSeparator=","
+              prefix="Rp "
+              valueIsNumericString
+            />
           </Stack>
-        </Box>
-      </CardContent>
+
+          <Button component="label" variant="outlined" size="medium">
+            {image ? "Change Image" : "Upload Image"}
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setImage(e.target.files[0]);
+                }
+              }}
+            />
+          </Button>
+
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            disabled={mutation.isPending}
+            sx={{ mt: 1 }}
+          >
+            {mutation.isPending ? "Saving..." : "Save"}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outlined"
+            size="large"
+            onClick={handleReset}
+            disabled={mutation.isPending}
+          >
+            Reset Form
+          </Button>
+        </Stack>
+      </Box>
+    </>
+  );
+
+  if (mode === "plain") {
+    return formContent;
+  }
+
+  return (
+    <Card elevation={3}>
+      <CardContent>{formContent}</CardContent>
     </Card>
   );
 }
