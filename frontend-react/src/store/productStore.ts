@@ -1,16 +1,17 @@
 import { create } from "zustand";
+import type { Product } from "../interfaces/Product";
 
 interface ProductState {
-  selectedId: number | null;
+  selectedProduct: Product | null;
 
-  setSelectedId: (id: number) => void;
+  setSelectedProduct: (product: Product | null) => void;
 }
 
 export const useProductStore = create<ProductState>((set) => ({
-  selectedId: null,
+  selectedProduct: null,
 
-  setSelectedId: (id) =>
+  setSelectedProduct: (product) =>
     set({
-      selectedId: id,
+      selectedProduct: product,
     }),
 }));

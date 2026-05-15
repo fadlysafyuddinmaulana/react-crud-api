@@ -1,0 +1,67 @@
+--progress is a global compose flag, better use `docker compose --progress xx build ...
+time="2026-05-15T10:26:39+07:00" level=warning msg="D:\\fadly\\react-crud-api\\docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Image react-crud-api-laravel Building 
+ Image react-crud-api-react Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 994B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 30B 0.0s
+#2 transferring dockerfile: 349B 0.1s done
+#2 DONE 0.1s
+
+#3 [internal] load metadata for docker.io/library/node:20-alpine
+#3 DONE 1.9s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B 0.0s done
+#4 DONE 0.1s
+
+#5 [internal] load build context
+#5 DONE 0.0s
+
+#6 [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#6 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 0.1s done
+#6 DONE 0.1s
+
+#5 [internal] load build context
+#5 transferring context: 1.38MB 2.0s done
+#5 DONE 2.4s
+
+#7 [stage-1 3/4] RUN npm install -g serve
+#7 CACHED
+
+#8 [builder 3/6] COPY package*.json ./
+#8 CACHED
+
+#9 [builder 4/6] RUN npm install
+#9 CACHED
+
+#10 [builder 6/6] RUN npm run build
+#10 CACHED
+
+#11 [builder 2/6] WORKDIR /app
+#11 CACHED
+
+#12 [builder 5/6] COPY . .
+#12 CACHED
+
+#13 [stage-1 4/4] COPY --from=builder /app/dist ./dist
+#13 CACHED
+
+#14 exporting to image
+#14 exporting layers done
+#14 exporting manifest sha256:6656c9fc490beda31b47a25bd4ebdb5b3d91924d6133a72235853c38859912b8 done
+#14 exporting config sha256:b0e56614beb7829941eab4698b0965f316ecb7e4bb3534c86dafe70297a5f324 done
+#14 exporting attestation manifest sha256:99a596f40a10cb9128c4d1cce8f1253f91f076e5cdb651183133ce9215e7754b
+#14 exporting attestation manifest sha256:99a596f40a10cb9128c4d1cce8f1253f91f076e5cdb651183133ce9215e7754b 0.0s done
+#14 exporting manifest list sha256:084a195ae52eff5c40ca67d68f71ef57dbc0592f96586f69fbc731c3b804e904 0.0s done
+#14 naming to docker.io/library/react-crud-api-react:latest done
+#14 unpacking to docker.io/library/react-crud-api-react:latest
+#14 unpacking to docker.io/library/react-crud-api-react:latest 2.1s done
+#14 DONE 2.3s
+
+#15 resolving provenance for metadata file
+#15 DONE 0.1s
+ Image react-crud-api-react Built 

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
-// use App\Services\PythonService;
+use App\Services\PythonService;
 
 class ProductController extends Controller
 {
@@ -40,9 +40,20 @@ class ProductController extends Controller
 
     public function update(Request $request, string $id)
     {
-        $product=Product::findOrFail($id);
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'stock' => 'sometimes|required|integer',
+            'price' => 'sometimes|required|numeric',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
 
-        $product->update($request->all());
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+            $validated['image'] = $imagePath;
+        }
+
+        $product = Product::findOrFail($id);
+        $product->update($validated);
 
         return $product;
     }
@@ -54,5 +65,29 @@ class ProductController extends Controller
         return response()->json([
             'message'=> 'Deleted',
         ]);
+    }
+
+    public function analyze()
+    {
+        try {
+            $payload = app(PythonService::class)->analyzeProducts();
+
+            return response()->json([
+                'status' => 'ok',
+                'data' => $payload,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('ProductAnalysis Error', [
+                'message' => $e->getMessage(),
+                'exception' => class_basename($e),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'debug' => app()->isLocal() ? $e->getTraceAsString() : null,
+            ], 500);
+        }
     }
 }

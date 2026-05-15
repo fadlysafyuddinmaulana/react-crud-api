@@ -1,40 +1,19 @@
 <?php
 
 use App\Http\Controllers\ProductController;
-use App\Http\Middleware\Cors;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+// NOTE: Authentication and CORS removed - all product endpoints are public for CRUD testing
 
-Route::middleware([Cors::class])->group(function () {
-    // Public login endpoint
-    Route::post('login', function (Request $request) {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+// Public endpoints for frontend product listing/detail.
+Route::get('products', [ProductController::class, 'index']);
+Route::post('products', [ProductController::class, 'store']);
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-            $token = $user->createToken('frontend-token')->plainTextToken;
-            return response()->json(['token' => $token, 'user' => $user]);
-        }
+// Specific endpoints before parameterized routes
+Route::get('products/analyze', [ProductController::class, 'analyze']);
+Route::put('products/{id}', [ProductController::class, 'update']);
+Route::delete('products/{id}', [ProductController::class, 'destroy']);
 
-        return response()->json(['message' => 'Invalid credentials'], 401);
-    });
-
-    // Public endpoints for frontend product listing/detail.
-    Route::get('products', [ProductController::class, 'index']);
-    Route::get('products/{id}', [ProductController::class, 'show']);
-    Route::post('products', [ProductController::class, 'store']);
-
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    })->middleware('auth:sanctum');
-
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::get('products/analyze', [ProductController::class, 'analyze']);
-        Route::put('products/{id}', [ProductController::class, 'update']);
-        Route::delete('products/{id}', [ProductController::class, 'destroy']);
-    });
-});
+// Parameterized routes - MUST be last
+Route::get('products/{id}', [ProductController::class, 'show']);

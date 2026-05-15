@@ -19,13 +19,25 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import api from "../services/api";
+import {
+  analyzeProducts,
+  type ProductAnalysisResponse,
+} from "../services/analysis";
 import type { Product } from "../interfaces/Product";
 import ProductCreate from "./ProductCreate";
+import ProductEdit from "./ProductEdit";
+import { useProductStore } from "../store/productStore";
 
 function ProductList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeResult, setAnalyzeResult] =
+    useState<ProductAnalysisResponse | null>(null);
+  const [openAnalyzeDialog, setOpenAnalyzeDialog] = useState(false);
   const queryClient = useQueryClient();
+  const { setSelectedProduct } = useProductStore();
 
   const fetchProducts = async () => {
     const response = await api.get("/products");
@@ -60,8 +72,11 @@ function ProductList() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => {
+        const baseStorageUrl = import.meta.env.VITE_API_URL
+          ? import.meta.env.VITE_API_URL.replace("/api", "/storage")
+          : "http://localhost:8000/storage";
         const imageUrl = params.row.image
-          ? `http://localhost:8000/storage/${params.row.image}`
+          ? `${baseStorageUrl}/${params.row.image}`
           : null;
         return (
           <Box
@@ -144,9 +159,10 @@ function ProductList() {
           <Button
             variant="outlined"
             size="small"
-            color="primary"
+            color="warning"
             onClick={() => {
-              console.log("edit", params.row.id);
+              setSelectedProduct(params.row);
+              setOpenEditDialog(true);
             }}
           >
             Edit
@@ -219,14 +235,43 @@ function ProductList() {
             Products
           </Typography>
 
-          <Button
-            variant="contained"
-            size="large"
-            onClick={() => setOpenCreateDialog(true)}
-            sx={{ px: 2.5, minWidth: 160, borderRadius: 1 }}
-          >
-            + Add Product
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => setOpenCreateDialog(true)}
+              sx={{ px: 2.5, minWidth: 160, borderRadius: 1 }}
+            >
+              + Add Product
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={async () => {
+                setAnalyzing(true);
+                try {
+                  const result = await analyzeProducts();
+                  setAnalyzeResult(result);
+                } catch (e: any) {
+                  const errorMsg =
+                    e?.response?.data?.message ||
+                    e?.message ||
+                    "Failed to call analysis";
+                  console.error("Analysis error:", e);
+                  setAnalyzeResult({
+                    status: "error",
+                    message: errorMsg,
+                  });
+                } finally {
+                  setAnalyzing(false);
+                  setOpenAnalyzeDialog(true);
+                }
+              }}
+              sx={{ px: 2.5, minWidth: 160, borderRadius: 1 }}
+            >
+              Analyze
+            </Button>
+          </Stack>
         </Stack>
 
         <TextField
@@ -298,6 +343,55 @@ function ProductList() {
                 setOpenCreateDialog(false);
               }}
             />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={openEditDialog}
+          onClose={() => {
+            setOpenEditDialog(false);
+            setSelectedProduct(null);
+          }}
+          fullWidth
+          maxWidth="sm"
+        >
+          <DialogTitle sx={{ fontWeight: 700 }}>Edit Product</DialogTitle>
+          <DialogContent>
+            <ProductEdit
+              onUpdated={() => {
+                setOpenEditDialog(false);
+                setSelectedProduct(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={openAnalyzeDialog}
+          onClose={() => setOpenAnalyzeDialog(false)}
+          fullWidth
+          maxWidth="md"
+        >
+          <DialogTitle sx={{ fontWeight: 700 }}>Analysis Result</DialogTitle>
+          <DialogContent>
+            {analyzing ? (
+              <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
+                <CircularProgress size={20} />
+                <Typography>Running analysis...</Typography>
+              </Stack>
+            ) : (
+              <Box
+                sx={{
+                  whiteSpace: "pre-wrap",
+                  fontFamily: "monospace",
+                  fontSize: 13,
+                }}
+              >
+                {analyzeResult
+                  ? JSON.stringify(analyzeResult, null, 2)
+                  : "No result"}
+              </Box>
+            )}
           </DialogContent>
         </Dialog>
       </CardContent>

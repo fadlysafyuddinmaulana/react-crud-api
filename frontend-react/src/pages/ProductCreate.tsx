@@ -129,6 +129,11 @@ function ProductCreate({ mode = "card", onCreated }: ProductCreateProps) {
               }}
             />
           </Button>
+          {image && (
+            <Typography variant="caption" color="text.secondary">
+              {image.name} ({(image.size / 1024).toFixed(1)} KB)
+            </Typography>
+          )}
 
           <Button
             type="submit"

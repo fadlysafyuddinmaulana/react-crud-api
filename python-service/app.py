@@ -1,26 +1,62 @@
-from fastapi import FastAPI
-import pandas as pd
-from sqlalchemy import create_engine
-import uvicorn
+from fastapi import FastAPI, HTTPException
+import os
+import traceback
+
+from sqlalchemy import create_engine, text
 
 app = FastAPI()
 
-engine = create_engine(
-    "postgresql://postgres:postgres@localhost/crud_db"
+database_url = os.getenv(
+    "DATABASE_URL",
+    "postgresql+psycopg://postgres:postgres@localhost/react_crud_db",
 )
 
-@app.get("/analysis/products")
-def analyze_products():
+engine = create_engine(database_url)
 
-    df = pd.read_sql("SELECT * FROM products", engine)
+@app.get("/")
+def home():
 
-    result = {
-        "total_stock": int(df["stock"].sum()),
-        "average_price": float(df["price"].mean())
+    return {
+        "message": "Python Analytics Running"
     }
 
-    return result
+@app.get("/analysis/products")
+def product_analysis():
+    try:
+        query = text("""
+            SELECT
+                COUNT(*) AS total_products,
+                COALESCE(SUM(stock), 0) AS total_stock,
+                COALESCE(AVG(price), 0) AS average_price,
+                COALESCE(MAX(price), 0) AS max_price,
+                COALESCE(MIN(price), 0) AS min_price
+            FROM products
+        """)
 
+        with engine.connect() as connection:
+            row = connection.execute(query).mappings().first()
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+        if not row:
+            return {
+                "total_products": 0,
+                "total_stock": 0,
+                "average_price": 0.0,
+                "max_price": 0.0,
+                "min_price": 0.0,
+            }
+
+        return {
+            "total_products": int(row["total_products"]),
+            "total_stock": int(row["total_stock"]),
+            "average_price": float(row["average_price"]),
+            "max_price": float(row["max_price"]),
+            "min_price": float(row["min_price"]),
+        }
+    except Exception as e:
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        print(f"[ERROR] /analysis/products: {error_msg}")
+        print(traceback.format_exc())
+        raise HTTPException(
+            status_code=500,
+            detail=error_msg
+        )

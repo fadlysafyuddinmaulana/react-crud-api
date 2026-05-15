@@ -58,10 +58,62 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 
-coba berikan tambahan yaitu pada state react langsung di perbarui setelah data baru muncul karena awalnya pakai refreshTrigger tapi kurang cocok bagi saya apakah ada rekomendasi mungkin di bawah ini contoh syntaxnya
-const handleDelete = async (id: number) => {
-  await axios.delete(`http://localhost:8000/api/products/${id}`);
+## Python Service Integration
 
-  // refresh data otomatis
-  getProducts();
-};
+Project ini terhubung dengan layanan analitik FastAPI pada folder `python-service/`.
+
+Jalankan lokal (tanpa Docker):
+
+```bash
+cd python-service
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app:app --host 0.0.0.0 --port 8001 --reload
+```
+
+Konfigurasi Laravel `.env`:
+
+```env
+PYTHON_SERVICE_URL=http://127.0.0.1:8001
+PYTHON_SERVICE_TIMEOUT=30
+```
+
+Jika menjalankan via Docker Compose, backend otomatis memakai:
+
+```env
+PYTHON_SERVICE_URL=http://python-service:8001
+```
+
+Endpoint API Laravel untuk analitik:
+
+- `GET /api/products/analyze`
+
+## Database Setup & Seeding
+
+Jalankan migrasi dan seed database:
+
+```bash
+php artisan migrate --seed
+```
+
+Ini akan membuat:
+
+- 1 test user dengan email `test@example.com` dan password `password`
+- 10 produk contoh dengan image dari placeholder API (`https://via.placeholder.com/`)
+
+**Produk yang di-seed:**
+
+- Laptop Dell Inspiron 15 (Rp 12.5M, stock 45)
+- Mouse Logitech MX Master (Rp 1.2M, stock 150)
+- Keyboard Mechanical RGB (Rp 2.5M, stock 80)
+- Monitor LG 27 inch (Rp 5.5M, stock 25)
+- Headphone Sony WH-1000XM5 (Rp 4.5M, stock 60)
+- Webcam Logitech C920 (Rp 1.8M, stock 120)
+- External SSD Samsung 1TB (Rp 2.2M, stock 35)
+- USB Hub 7 Port (Rp 450K, stock 200)
+- Laptop Stand Adjustable (Rp 650K, stock 95)
+- Cable USB-C 2M (Rp 150K, stock 500)
+
+Semua image di-generate dengan placeholder API untuk testing tanpa upload file.
