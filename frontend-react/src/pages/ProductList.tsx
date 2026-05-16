@@ -36,6 +36,10 @@ function ProductList() {
   const [analyzeResult, setAnalyzeResult] =
     useState<ProductAnalysisResponse | null>(null);
   const [openAnalyzeDialog, setOpenAnalyzeDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const queryClient = useQueryClient();
   const { setSelectedProduct } = useProductStore();
 
@@ -50,6 +54,16 @@ function ProductList() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      setDeleteSuccess(true);
+      setOpenDeleteDialog(false);
+      setTimeout(() => setDeleteSuccess(false), 3000);
+    },
+    onError: (error: any) => {
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to delete product";
+      setDeleteError(errorMsg);
     },
   });
 
@@ -171,7 +185,11 @@ function ProductList() {
             variant="outlined"
             size="small"
             color="error"
-            onClick={() => deleteMutation.mutate(params.row.id)}
+            onClick={() => {
+              setProductToDelete(params.row);
+              setDeleteError(null);
+              setOpenDeleteDialog(true);
+            }}
           >
             Delete
           </Button>
@@ -393,6 +411,56 @@ function ProductList() {
               </Box>
             )}
           </DialogContent>
+        </Dialog>
+
+        {deleteSuccess && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            Product deleted successfully!
+          </Alert>
+        )}
+
+        <Dialog
+          open={openDeleteDialog}
+          onClose={() => setOpenDeleteDialog(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: 700 }}>Delete Product</DialogTitle>
+          <DialogContent>
+            <Typography sx={{ mb: 2 }}>
+              Are you sure you want to delete{" "}
+              <strong>{productToDelete?.name}</strong>? This action cannot be
+              undone.
+            </Typography>
+            {deleteError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {deleteError}
+              </Alert>
+            )}
+          </DialogContent>
+          <Box
+            sx={{ p: 2, display: "flex", gap: 1, justifyContent: "flex-end" }}
+          >
+            <Button
+              variant="outlined"
+              onClick={() => setOpenDeleteDialog(false)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => {
+                if (productToDelete?.id) {
+                  deleteMutation.mutate(productToDelete.id);
+                }
+              }}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </Box>
         </Dialog>
       </CardContent>
     </Card>
