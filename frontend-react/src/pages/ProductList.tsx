@@ -9,6 +9,7 @@ import {
   Chip,
   CircularProgress,
   Dialog,
+  DialogActions,
   DialogContent,
   DialogTitle,
   InputAdornment,
@@ -438,9 +439,7 @@ function ProductList() {
               </Alert>
             )}
           </DialogContent>
-          <Box
-            sx={{ p: 2, display: "flex", gap: 1, justifyContent: "flex-end" }}
-          >
+          <DialogActions>
             <Button
               variant="outlined"
               onClick={() => setOpenDeleteDialog(false)}
@@ -460,7 +459,7 @@ function ProductList() {
             >
               {deleteMutation.isPending ? "Deleting..." : "Delete"}
             </Button>
-          </Box>
+          </DialogActions>
         </Dialog>
       </CardContent>
     </Card>
